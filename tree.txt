@@ -1,0 +1,500 @@
+列出磁碟區 SYSTEM 的資料夾 PATH
+磁碟區序號為 1CCB-E196
+C:.
+├─.devcontainer
+├─.vscode
+├─build
+│  ├─bootloader
+│  │  ├─CMakeFiles
+│  │  │  ├─3.30.2
+│  │  │  │  ├─CompilerIdASM
+│  │  │  │  ├─CompilerIdC
+│  │  │  │  │  └─tmp
+│  │  │  │  └─CompilerIdCXX
+│  │  │  │      └─tmp
+│  │  │  ├─bootloader.elf.dir
+│  │  │  ├─CMakeScratch
+│  │  │  ├─git-data
+│  │  │  └─pkgRedirects
+│  │  ├─config
+│  │  ├─esp-idf
+│  │  │  ├─bootloader
+│  │  │  │  └─CMakeFiles
+│  │  │  ├─bootloader_support
+│  │  │  │  └─CMakeFiles
+│  │  │  │      └─__idf_bootloader_support.dir
+│  │  │  │          ├─bootloader_flash
+│  │  │  │          │  └─src
+│  │  │  │          └─src
+│  │  │  │              └─esp32c3
+│  │  │  ├─CMakeFiles
+│  │  │  ├─efuse
+│  │  │  │  └─CMakeFiles
+│  │  │  │      └─__idf_efuse.dir
+│  │  │  │          ├─esp32c3
+│  │  │  │          └─src
+│  │  │  │              └─efuse_controller
+│  │  │  │                  └─keys
+│  │  │  │                      └─with_key_purposes
+│  │  │  ├─esptool_py
+│  │  │  │  └─CMakeFiles
+│  │  │  ├─esp_app_format
+│  │  │  │  └─CMakeFiles
+│  │  │  ├─esp_bootloader_format
+│  │  │  │  └─CMakeFiles
+│  │  │  │      └─__idf_esp_bootloader_format.dir
+│  │  │  ├─esp_common
+│  │  │  │  └─CMakeFiles
+│  │  │  │      └─__idf_esp_common.dir
+│  │  │  │          └─src
+│  │  │  ├─esp_hw_support
+│  │  │  │  ├─CMakeFiles
+│  │  │  │  │  └─__idf_esp_hw_support.dir
+│  │  │  │  │      └─port
+│  │  │  │  │          └─esp32c3
+│  │  │  │  ├─lowpower
+│  │  │  │  │  └─CMakeFiles
+│  │  │  │  └─port
+│  │  │  │      └─esp32c3
+│  │  │  │          └─CMakeFiles
+│  │  │  ├─esp_rom
+│  │  │  │  └─CMakeFiles
+│  │  │  │      └─__idf_esp_rom.dir
+│  │  │  │          └─patches
+│  │  │  ├─esp_security
+│  │  │  │  └─CMakeFiles
+│  │  │  ├─esp_system
+│  │  │  │  └─CMakeFiles
+│  │  │  │      └─__idf_esp_system.dir
+│  │  │  ├─freertos
+│  │  │  │  └─CMakeFiles
+│  │  │  ├─hal
+│  │  │  │  └─CMakeFiles
+│  │  │  │      └─__idf_hal.dir
+│  │  │  │          └─esp32c3
+│  │  │  ├─log
+│  │  │  │  └─CMakeFiles
+│  │  │  │      └─__idf_log.dir
+│  │  │  │          └─src
+│  │  │  │              ├─buffer
+│  │  │  │              └─noos
+│  │  │  ├─main
+│  │  │  │  └─CMakeFiles
+│  │  │  │      └─__idf_main.dir
+│  │  │  ├─micro-ecc
+│  │  │  │  └─CMakeFiles
+│  │  │  │      └─__idf_micro-ecc.dir
+│  │  │  ├─newlib
+│  │  │  │  └─CMakeFiles
+│  │  │  ├─partition_table
+│  │  │  │  └─CMakeFiles
+│  │  │  ├─riscv
+│  │  │  │  └─CMakeFiles
+│  │  │  │      └─__idf_riscv.dir
+│  │  │  ├─soc
+│  │  │  │  └─CMakeFiles
+│  │  │  │      └─__idf_soc.dir
+│  │  │  │          └─esp32c3
+│  │  │  └─spi_flash
+│  │  │      └─CMakeFiles
+│  │  │          └─__idf_spi_flash.dir
+│  │  └─gdbinit
+│  ├─bootloader-prefix
+│  │  ├─src
+│  │  │  └─bootloader-stamp
+│  │  └─tmp
+│  ├─CMakeFiles
+│  │  ├─3.30.2
+│  │  │  ├─CompilerIdASM
+│  │  │  ├─CompilerIdC
+│  │  │  │  └─tmp
+│  │  │  └─CompilerIdCXX
+│  │  │      └─tmp
+│  │  ├─bootloader.dir
+│  │  ├─CMakeScratch
+│  │  ├─git-data
+│  │  ├─pkgRedirects
+│  │  └─soilsensorcapture.elf.dir
+│  ├─config
+│  ├─esp-idf
+│  │  ├─app_update
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_app_update.dir
+│  │  ├─bootloader
+│  │  │  └─CMakeFiles
+│  │  ├─bootloader_support
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_bootloader_support.dir
+│  │  │          ├─bootloader_flash
+│  │  │          │  └─src
+│  │  │          └─src
+│  │  │              └─esp32c3
+│  │  ├─CMakeFiles
+│  │  ├─cxx
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_cxx.dir
+│  │  ├─driver
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_driver.dir
+│  │  │          ├─deprecated
+│  │  │          ├─i2c
+│  │  │          └─twai
+│  │  ├─efuse
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_efuse.dir
+│  │  │          ├─esp32c3
+│  │  │          └─src
+│  │  │              └─efuse_controller
+│  │  │                  └─keys
+│  │  │                      └─with_key_purposes
+│  │  ├─esp-tls
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp-tls.dir
+│  │  │          └─esp-tls-crypto
+│  │  ├─esptool_py
+│  │  │  └─CMakeFiles
+│  │  ├─esp_adc
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_adc.dir
+│  │  │          ├─deprecated
+│  │  │          │  └─esp32c3
+│  │  │          ├─esp32c3
+│  │  │          └─gdma
+│  │  ├─esp_app_format
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_app_format.dir
+│  │  ├─esp_bootloader_format
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_bootloader_format.dir
+│  │  ├─esp_coex
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_coex.dir
+│  │  │          ├─esp32c3
+│  │  │          └─src
+│  │  ├─esp_common
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_common.dir
+│  │  │          └─src
+│  │  ├─esp_driver_ana_cmpr
+│  │  │  └─CMakeFiles
+│  │  ├─esp_driver_bitscrambler
+│  │  │  └─CMakeFiles
+│  │  ├─esp_driver_dac
+│  │  │  └─CMakeFiles
+│  │  ├─esp_driver_gpio
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_driver_gpio.dir
+│  │  │          └─src
+│  │  ├─esp_driver_gptimer
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_driver_gptimer.dir
+│  │  │          └─src
+│  │  ├─esp_driver_i2c
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_driver_i2c.dir
+│  │  ├─esp_driver_i2s
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_driver_i2s.dir
+│  │  ├─esp_driver_ledc
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_driver_ledc.dir
+│  │  │          └─src
+│  │  ├─esp_driver_mcpwm
+│  │  │  └─CMakeFiles
+│  │  ├─esp_driver_parlio
+│  │  │  └─CMakeFiles
+│  │  ├─esp_driver_pcnt
+│  │  │  └─CMakeFiles
+│  │  ├─esp_driver_rmt
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_driver_rmt.dir
+│  │  │          └─src
+│  │  ├─esp_driver_sdio
+│  │  │  └─CMakeFiles
+│  │  ├─esp_driver_sdm
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_driver_sdm.dir
+│  │  │          └─src
+│  │  ├─esp_driver_sdmmc
+│  │  │  └─CMakeFiles
+│  │  ├─esp_driver_sdspi
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_driver_sdspi.dir
+│  │  │          └─src
+│  │  ├─esp_driver_spi
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_driver_spi.dir
+│  │  │          └─src
+│  │  │              └─gpspi
+│  │  ├─esp_driver_tsens
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_driver_tsens.dir
+│  │  │          └─src
+│  │  ├─esp_driver_twai
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_driver_twai.dir
+│  │  ├─esp_driver_uart
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_driver_uart.dir
+│  │  │          └─src
+│  │  ├─esp_driver_usb_serial_jtag
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_driver_usb_serial_jtag.dir
+│  │  │          └─src
+│  │  ├─esp_event
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_event.dir
+│  │  ├─esp_hw_support
+│  │  │  ├─CMakeFiles
+│  │  │  │  └─__idf_esp_hw_support.dir
+│  │  │  │      ├─deprecated
+│  │  │  │      ├─dma
+│  │  │  │      ├─lowpower
+│  │  │  │      │  └─port
+│  │  │  │      │      └─esp32c3
+│  │  │  │      ├─mspi_timing_tuning
+│  │  │  │      ├─port
+│  │  │  │      │  └─esp32c3
+│  │  │  │      └─power_supply
+│  │  │  ├─lowpower
+│  │  │  │  └─CMakeFiles
+│  │  │  └─port
+│  │  │      └─esp32c3
+│  │  │          └─CMakeFiles
+│  │  ├─esp_mm
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_mm.dir
+│  │  │          └─port
+│  │  │              └─esp32c3
+│  │  ├─esp_netif
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_netif.dir
+│  │  │          └─lwip
+│  │  │              └─netif
+│  │  ├─esp_netif_stack
+│  │  │  └─CMakeFiles
+│  │  ├─esp_partition
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_partition.dir
+│  │  ├─esp_phy
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_phy.dir
+│  │  │          ├─esp32c3
+│  │  │          └─src
+│  │  ├─esp_pm
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_pm.dir
+│  │  ├─esp_ringbuf
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_ringbuf.dir
+│  │  ├─esp_rom
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_rom.dir
+│  │  │          └─patches
+│  │  ├─esp_security
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_security.dir
+│  │  │          └─src
+│  │  ├─esp_system
+│  │  │  ├─CMakeFiles
+│  │  │  │  └─__idf_esp_system.dir
+│  │  │  │      ├─port
+│  │  │  │      │  ├─arch
+│  │  │  │      │  │  └─riscv
+│  │  │  │      │  └─soc
+│  │  │  │      │      └─esp32c3
+│  │  │  │      └─task_wdt
+│  │  │  ├─ld
+│  │  │  └─port
+│  │  │      ├─CMakeFiles
+│  │  │      └─soc
+│  │  │          └─esp32c3
+│  │  │              └─CMakeFiles
+│  │  ├─esp_timer
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_timer.dir
+│  │  │          └─src
+│  │  ├─esp_vfs_console
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_vfs_console.dir
+│  │  ├─esp_wifi
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_esp_wifi.dir
+│  │  │          ├─esp32c3
+│  │  │          ├─regulatory
+│  │  │          └─src
+│  │  ├─freertos
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_freertos.dir
+│  │  │          ├─esp_additions
+│  │  │          └─FreeRTOS-Kernel
+│  │  │              └─portable
+│  │  │                  └─riscv
+│  │  ├─hal
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_hal.dir
+│  │  │          └─esp32c3
+│  │  ├─heap
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_heap.dir
+│  │  │          ├─port
+│  │  │          │  └─esp32c3
+│  │  │          └─tlsf
+│  │  ├─http_parser
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_http_parser.dir
+│  │  ├─json
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_json.dir
+│  │  │          └─cJSON
+│  │  ├─log
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_log.dir
+│  │  │          └─src
+│  │  │              ├─buffer
+│  │  │              ├─log_level
+│  │  │              │  └─tag_log_level
+│  │  │              │      ├─cache
+│  │  │              │      └─linked_list
+│  │  │              └─os
+│  │  ├─lwip
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_lwip.dir
+│  │  │          ├─apps
+│  │  │          │  ├─dhcpserver
+│  │  │          │  ├─ping
+│  │  │          │  └─sntp
+│  │  │          ├─lwip
+│  │  │          │  └─src
+│  │  │          │      ├─api
+│  │  │          │      ├─apps
+│  │  │          │      │  ├─netbiosns
+│  │  │          │      │  └─sntp
+│  │  │          │      ├─core
+│  │  │          │      │  ├─ipv4
+│  │  │          │      │  └─ipv6
+│  │  │          │      └─netif
+│  │  │          │          └─ppp
+│  │  │          │              └─polarssl
+│  │  │          └─port
+│  │  │              ├─debug
+│  │  │              ├─esp32xx
+│  │  │              ├─freertos
+│  │  │              └─hooks
+│  │  ├─main
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_main.dir
+│  │  ├─mbedtls
+│  │  │  ├─CMakeFiles
+│  │  │  │  └─__idf_mbedtls.dir
+│  │  │  │      ├─esp_crt_bundle
+│  │  │  │      └─__
+│  │  │  │          └─__
+│  │  │  └─mbedtls
+│  │  │      ├─3rdparty
+│  │  │      │  ├─CMakeFiles
+│  │  │      │  ├─everest
+│  │  │      │  │  └─CMakeFiles
+│  │  │      │  │      └─everest.dir
+│  │  │      │  │          └─library
+│  │  │      │  └─p256-m
+│  │  │      │      └─CMakeFiles
+│  │  │      │          └─p256m.dir
+│  │  │      │              └─p256-m
+│  │  │      ├─CMakeFiles
+│  │  │      ├─include
+│  │  │      │  └─CMakeFiles
+│  │  │      ├─library
+│  │  │      │  └─CMakeFiles
+│  │  │      │      ├─mbedcrypto.dir
+│  │  │      │      │  └─C_
+│  │  │      │      │      └─Users
+│  │  │      │      │          └─grant
+│  │  │      │      │              └─esp
+│  │  │      │      │                  └─v5.5
+│  │  │      │      │                      └─esp-idf
+│  │  │      │      │                          └─components
+│  │  │      │      │                              └─mbedtls
+│  │  │      │      │                                  └─port
+│  │  │      │      │                                      ├─aes
+│  │  │      │      │                                      │  └─dma
+│  │  │      │      │                                      ├─bignum
+│  │  │      │      │                                      ├─crypto_shared_gdma
+│  │  │      │      │                                      ├─esp_ds
+│  │  │      │      │                                      ├─md
+│  │  │      │      │                                      └─sha
+│  │  │      │      │                                          └─core
+│  │  │      │      ├─mbedtls.dir
+│  │  │      │      │  └─C_
+│  │  │      │      │      └─Users
+│  │  │      │      │          └─grant
+│  │  │      │      │              └─esp
+│  │  │      │      │                  └─v5.5
+│  │  │      │      │                      └─esp-idf
+│  │  │      │      │                          └─components
+│  │  │      │      │                              └─mbedtls
+│  │  │      │      │                                  └─port
+│  │  │      │      └─mbedx509.dir
+│  │  │      └─pkgconfig
+│  │  │          └─CMakeFiles
+│  │  ├─mqtt
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_mqtt.dir
+│  │  │          └─esp-mqtt
+│  │  │              └─lib
+│  │  ├─newlib
+│  │  │  ├─CMakeFiles
+│  │  │  │  └─__idf_newlib.dir
+│  │  │  │      └─src
+│  │  │  │          └─port
+│  │  │  └─src
+│  │  │      └─port
+│  │  │          └─CMakeFiles
+│  │  ├─nvs_flash
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_nvs_flash.dir
+│  │  │          └─src
+│  │  ├─partition_table
+│  │  │  └─CMakeFiles
+│  │  ├─pthread
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_pthread.dir
+│  │  ├─riscv
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_riscv.dir
+│  │  ├─sdmmc
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_sdmmc.dir
+│  │  │          └─sd_pwr_ctrl
+│  │  ├─soc
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_soc.dir
+│  │  │          └─esp32c3
+│  │  ├─spi_flash
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_spi_flash.dir
+│  │  ├─tcp_transport
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_tcp_transport.dir
+│  │  ├─vfs
+│  │  │  └─CMakeFiles
+│  │  │      └─__idf_vfs.dir
+│  │  └─wpa_supplicant
+│  │      └─CMakeFiles
+│  │          └─__idf_wpa_supplicant.dir
+│  │              ├─esp_supplicant
+│  │              │  └─src
+│  │              │      └─crypto
+│  │              ├─port
+│  │              └─src
+│  │                  ├─ap
+│  │                  ├─common
+│  │                  ├─crypto
+│  │                  ├─eap_common
+│  │                  ├─eap_peer
+│  │                  ├─rsn_supp
+│  │                  ├─utils
+│  │                  └─wps
+│  ├─gdbinit
+│  └─partition_table
+└─main

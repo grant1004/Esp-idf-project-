@@ -1,0 +1,102 @@
+# ESP-IDF 構建產出
+build/
+sdkconfig
+sdkconfig.old
+*.bin
+*.elf
+*.map
+
+# 分區表構建產出
+partition_table/
+
+# 監控和調試
+.gdb_history
+gdbinit
+*.gdb
+*.core
+
+# IDE 設定檔 (可選擇保留或忽略)
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 系統檔案
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Python 快取
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# 環境檔案
+.env
+.env.local
+.env.*.local
+
+# 日誌檔案
+*.log
+logs/
+
+# 臨時檔案
+*.tmp
+*.temp
+*.bak
+*.orig
+
+# 編輯器備份檔案
+*~
+.#*
+\#*#
+
+# 文件編輯器
+*.kate-swp
+.*.swp
+.*.swo
+
+# 證書和密鑰 (安全考量)
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# 用戶自定義配置
+local.mk
+local_config.h
+
+# Flash 下載工具設定
+flash_project_args
+flasher_args.json
+
+# IDF 監控
+idf_monitor.py
+
+# 編譯工具鏈
+tools/
+
+# 組件依賴
+dependencies.lock
+managed_components/
+
+# ESP-IDF 特定的隱藏檔案
+.esp_idf_version
+
+# Node modules (如果使用 Web 介面)
+node_modules/
+
+# 打包檔案
+*.tar.gz
+*.zip
+*.rar
+
+# 測試覆蓋率報告
+coverage/
+*.gcov
+*.gcda
+*.gcno
+
