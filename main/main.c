@@ -43,6 +43,8 @@
 #include "cJSON.h"       // JSON 處理函式庫，用於建立和解析 JSON 格式資料
 #include "esp_netif.h"   // 網路介面函式庫，提供網路配置功能
 #include "lwip/inet.h"   // LwIP 網路函式庫，提供 IP 位址轉換
+#include "lwip/netdb.h"  // 網路資料庫函式庫，提供 gethostbyname 等函數
+#include "lwip/sockets.h" // Socket 函式庫，提供網路通訊功能
 
 
 // ============================================================================
@@ -137,12 +139,64 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
         // 將 event_data 轉型為 IP 事件結構指標 (來自 esp_event.h)
         ip_event_got_ip_t* event = (ip_event_got_ip_t*) event_data;
-        // 輸出取得的 IP 位址，IPSTR 和 IP2STR 是 IP 位址格式化巨集
-        ESP_LOGI(TAG, "取得IP: " IPSTR, IP2STR(&event->ip_info.ip));
+        // 輸出完整的網路配置資訊
+        ESP_LOGI(TAG, "✅ WiFi 連接成功！");
+        ESP_LOGI(TAG, "📍 IP位址: " IPSTR, IP2STR(&event->ip_info.ip));
+        ESP_LOGI(TAG, "🌐 子網遮罩: " IPSTR, IP2STR(&event->ip_info.netmask));
+        ESP_LOGI(TAG, "🚪 預設閘道: " IPSTR, IP2STR(&event->ip_info.gw));
+        
+        // 檢查DNS設定
+        esp_netif_t* netif = esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");
+        if (netif) {
+            esp_netif_dns_info_t dns_info;
+            if (esp_netif_get_dns_info(netif, ESP_NETIF_DNS_MAIN, &dns_info) == ESP_OK) {
+                ESP_LOGI(TAG, "🔍 主DNS: " IPSTR, IP2STR(&dns_info.ip.u_addr.ip4));
+            }
+        }
+        
         // 設定 WiFi 連接成功事件位元 (來自 freertos/event_groups.h)
         // 參數：事件群組句柄, 要設定的位元
         xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+        
+        // 執行網路診斷
+        network_diagnostics();
     }
+}
+
+// ============================================================================
+// 網路診斷函數
+// 功能：測試DNS解析和基本連通性
+// ============================================================================
+static void network_diagnostics(void)
+{
+    ESP_LOGI(TAG, "🔧 開始網路診斷...");
+    
+    // 測試DNS解析
+    struct hostent *he = gethostbyname("test.mosquitto.org");
+    if (he != NULL) {
+        struct in_addr **addr_list = (struct in_addr **)he->h_addr_list;
+        if (addr_list[0] != NULL) {
+            ESP_LOGI(TAG, "✅ DNS解析成功: test.mosquitto.org -> %s", 
+                     inet_ntoa(*addr_list[0]));
+        }
+    } else {
+        ESP_LOGE(TAG, "❌ DNS解析失敗: test.mosquitto.org");
+        return;
+    }
+    
+    // 測試Google DNS
+    he = gethostbyname("google.com");
+    if (he != NULL) {
+        struct in_addr **addr_list = (struct in_addr **)he->h_addr_list;
+        if (addr_list[0] != NULL) {
+            ESP_LOGI(TAG, "✅ Google DNS測試成功: google.com -> %s", 
+                     inet_ntoa(*addr_list[0]));
+        }
+    } else {
+        ESP_LOGE(TAG, "❌ Google DNS測試失敗");
+    }
+    
+    ESP_LOGI(TAG, "🔧 網路診斷完成");
 }
 
 // ============================================================================
@@ -229,17 +283,8 @@ static void wifi_init_sta(void)
     // 返回網路介面句柄，用於後續網路操作
     esp_netif_t *netif = esp_netif_create_default_wifi_sta();
     
-    // 設定 DNS 伺服器以解決 DNS 解析問題
-    esp_netif_dns_info_t dns_info;
-    
-    // 設定主要 DNS (Google DNS 8.8.8.8)
-    dns_info.ip.u_addr.ip4.addr = ipaddr_addr("8.8.8.8");
-    dns_info.ip.type = IPADDR_TYPE_V4;
-    esp_netif_set_dns_info(netif, ESP_NETIF_DNS_MAIN, &dns_info);
-    
-    // 設定備用 DNS (Google DNS 8.8.4.4)
-    dns_info.ip.u_addr.ip4.addr = ipaddr_addr("8.8.4.4");
-    esp_netif_set_dns_info(netif, ESP_NETIF_DNS_BACKUP, &dns_info);
+    // 暫時移除自定義DNS設定，使用DHCP提供的DNS
+    // 讓路由器的DNS設定決定DNS伺服器
 
     // WiFi 初始化配置結構，使用預設值 (來自 esp_wifi.h)
     // WIFI_INIT_CONFIG_DEFAULT() 是一個巨集，提供標準的初始化參數
