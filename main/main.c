@@ -41,6 +41,8 @@
 // ============================================================================
 #include "mqtt_client.h" // MQTT 客戶端函式庫，提供 MQTT 協定實作
 #include "cJSON.h"       // JSON 處理函式庫，用於建立和解析 JSON 格式資料
+#include "esp_netif.h"   // 網路介面函式庫，提供網路配置功能
+#include <arpa/inet.h>   // 網路位址轉換函式庫，提供 inet_pton 函數
 
 
 // ============================================================================
@@ -58,10 +60,10 @@
 // ============================================================================
 // MQTT 伺服器設定區 - 與樹莓派版本保持一致的通訊協定
 // ============================================================================
-#define BROKER_HOST "broker.hivemq.com" // MQTT Broker 主機名稱 (HiveMQ 免費公共服務)
+#define BROKER_HOST "18.185.216.60" // MQTT Broker IP 地址 (HiveMQ 免費公共服務)
 #define BROKER_PORT 1883                // MQTT 標準埠號 (非加密連接)
 #define CLIENT_ID "soilsensorcapture_esp32c3" // MQTT 客戶端 ID，必須唯一
-#define MQTT_BROKER "mqtt://broker.hivemq.com:1883" // 完整的 MQTT 連接 URI
+#define MQTT_BROKER "mqtt://18.185.216.60:1883" // 完整的 MQTT 連接 URI
 
 // ============================================================================
 // MQTT Topic 定義區 - 訊息主題設計，與樹莓派版本互相兼容
@@ -215,7 +217,17 @@ static void wifi_init_sta(void)
     
     // 建立預設的 WiFi Station 網路介面 (來自 esp_wifi.h)
     // 返回網路介面句柄，用於後續網路操作
-    esp_netif_create_default_wifi_sta();
+    esp_netif_t *netif = esp_netif_create_default_wifi_sta();
+    
+    // 設定 DNS 伺服器以解決 DNS 解析問題
+    esp_netif_dns_info_t dns_info;
+    inet_pton(AF_INET, "8.8.8.8", &dns_info.ip.u_addr.ip4);
+    dns_info.ip.type = IPADDR_TYPE_V4;
+    esp_netif_set_dns_info(netif, ESP_NETIF_DNS_MAIN, &dns_info);
+    
+    // 設定備用 DNS
+    inet_pton(AF_INET, "8.8.4.4", &dns_info.ip.u_addr.ip4);
+    esp_netif_set_dns_info(netif, ESP_NETIF_DNS_BACKUP, &dns_info);
 
     // WiFi 初始化配置結構，使用預設值 (來自 esp_wifi.h)
     // WIFI_INIT_CONFIG_DEFAULT() 是一個巨集，提供標準的初始化參數
