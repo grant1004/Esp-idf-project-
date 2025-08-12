@@ -554,7 +554,7 @@ static void send_sensor_data(void)
         
         data_counter++;
         
-        ESP_LOGI(TAG, "[%d] ADC:%d 電壓:%.3fV 濕度:%.1f%% GPIO:%s", 
+        ESP_LOGI(TAG, "[%d] ADC:%d 電壓:%.3fV 濕度:%.1f%% GPIO:%s (QoS 0)", 
                 data_counter, raw_adc, voltage, moisture, 
                 current_pump_status ? "ON" : "OFF");
         
@@ -617,8 +617,8 @@ static void send_system_status(void)
     char *json_string = cJSON_Print(json);
     
     if (json_string) {
-        esp_mqtt_client_publish(mqtt_client, TOPIC_STATUS, json_string, 0, 0, 0);
-        ESP_LOGI(TAG, "📈 發送系統狀態 (指令統計: 成功=%lu, 錯誤=%lu, 澆水=%lu)", 
+        esp_mqtt_client_publish(mqtt_client, TOPIC_STATUS, json_string, 0, 2, 1);
+        ESP_LOGI(TAG, "📈 發送系統狀態 (指令統計: 成功=%lu, 錯誤=%lu, 澆水=%lu) [QoS 2, Retained]", 
                  processed_cmds, error_cmds, watering_count);
         free(json_string);
     }
