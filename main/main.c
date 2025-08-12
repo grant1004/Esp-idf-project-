@@ -60,10 +60,10 @@
 // ============================================================================
 // MQTT 伺服器設定區 - 與樹莓派版本保持一致的通訊協定
 // ============================================================================
-#define BROKER_HOST "18.185.216.60" // MQTT Broker IP 地址 (HiveMQ 免費公共服務)
+#define BROKER_HOST "test.mosquitto.org" // MQTT Broker 主機名稱 (Eclipse Mosquitto 公共測試服務)
 #define BROKER_PORT 1883                // MQTT 標準埠號 (非加密連接)
 #define CLIENT_ID "soilsensorcapture_esp32c3" // MQTT 客戶端 ID，必須唯一
-#define MQTT_BROKER "mqtt://18.185.216.60:1883" // 完整的 MQTT 連接 URI
+#define MQTT_BROKER "mqtt://test.mosquitto.org:1883" // 完整的 MQTT 連接 URI
 
 // ============================================================================
 // MQTT Topic 定義區 - 訊息主題設計，與樹莓派版本互相兼容
@@ -122,11 +122,13 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
     } 
     // 檢查是否為 WiFi 斷線事件
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
+        // 取得斷線原因
+        wifi_event_sta_disconnected_t* disconnected_event = (wifi_event_sta_disconnected_t*) event_data;
+        ESP_LOGW(TAG, "⚠️ WiFi 斷線 (原因碼: %d)，重新連接中...", disconnected_event->reason);
+        
         // 自動重新連接 WiFi
         esp_wifi_connect();
-        // 使用 ESP_LOGI 輸出資訊等級日誌 (來自 esp_log.h)
-        // 參數：TAG - 模組標籤, 格式化字串
-        ESP_LOGI(TAG, "重新連接 WiFi...");
+        
         // 清除 WiFi 連接事件位元 (來自 freertos/event_groups.h)
         // 參數：事件群組句柄, 要清除的位元
         xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
@@ -156,12 +158,20 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
     
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
-        ESP_LOGI(TAG, "MQTT 已連接");
+        ESP_LOGI(TAG, "✅ MQTT 已連接到 %s", BROKER_HOST);
         esp_mqtt_client_subscribe(client, TOPIC_COMMAND, 1);
+        ESP_LOGI(TAG, "📝 已訂閱指令主題: %s", TOPIC_COMMAND);
         break;
         
     case MQTT_EVENT_DISCONNECTED:
-        ESP_LOGI(TAG, "MQTT 斷線");
+        ESP_LOGW(TAG, "⚠️ MQTT 斷線，將自動重連...");
+        break;
+        
+    case MQTT_EVENT_ERROR:
+        ESP_LOGE(TAG, "❌ MQTT 錯誤: error_type=%d", event->error_handle->error_type);
+        if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT) {
+            ESP_LOGE(TAG, "TCP 傳輸錯誤: 0x%x", event->error_handle->esp_tls_last_esp_err);
+        }
         break;
         
     case MQTT_EVENT_DATA:
@@ -293,6 +303,15 @@ static void mqtt_init(void)
         },
         .credentials = {                         // 認證相關配置
             .client_id = CLIENT_ID,              // 客戶端 ID，必須在 Broker 中唯一
+        },
+        .network = {                             // 網路相關配置
+            .timeout_ms = 30000,                 // 連接超時時間 30 秒
+            .refresh_connection_after_ms = 300000, // 5 分鐘後刷新連接
+            .reconnect_timeout_ms = 10000,       // 重連間隔 10 秒
+        },
+        .session = {                             // 會話相關配置
+            .keepalive = 60,                     // 心跳間隔 60 秒
+            .disable_clean_session = false,      // 啟用清潔會話
         }
     };
     
