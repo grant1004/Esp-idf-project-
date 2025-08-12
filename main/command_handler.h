@@ -17,10 +17,12 @@
 // 指令類型定義
 // ============================================================================
 typedef enum {
-    CMD_GPIO_ON,        // 開啟 GPIO (泵浦)
-    CMD_GPIO_OFF,       // 關閉 GPIO (泵浦)
+    CMD_WATER,          // 澆水指令 (自動開啟幫浦1.5秒)
     CMD_GET_STATUS,     // 取得系統狀態
     CMD_GET_READING,    // 取得即時讀數
+    CMD_OTA_UPDATE,     // OTA 韌體更新指令
+    CMD_OTA_STATUS,     // 取得 OTA 狀態
+    CMD_OTA_CANCEL,     // 取消 OTA 更新
     CMD_UNKNOWN         // 未知指令
 } command_type_t;
 
@@ -77,12 +79,13 @@ command_type_t parse_command(const char* command_str, int cmd_len);
 esp_err_t enqueue_command(command_type_t cmd_type, const char* data);
 
 /**
- * @brief 執行 GPIO 控制指令
+ * @brief 執行澆水指令
  * 
- * @param enable true=開啟, false=關閉
+ * 開啟幫浦1.5秒後自動關閉
+ * 
  * @return esp_err_t ESP_OK 表示執行成功
  */
-esp_err_t execute_gpio_command(bool enable);
+esp_err_t execute_water_command(void);
 
 /**
  * @brief 執行狀態查詢指令
@@ -119,6 +122,35 @@ void set_pump_status(bool enabled);
  * @param error_count 錯誤指令數量指標
  */
 void get_command_stats(uint32_t* processed_count, uint32_t* error_count);
+
+/**
+ * @brief 取得澆水次數統計
+ * 
+ * @return uint32_t 總澆水次數
+ */
+uint32_t get_water_count(void);
+
+/**
+ * @brief 執行 OTA 更新指令
+ * 
+ * @param firmware_url 韌體下載 URL
+ * @return esp_err_t ESP_OK 表示執行成功
+ */
+esp_err_t execute_ota_update_command(const char* firmware_url);
+
+/**
+ * @brief 執行 OTA 狀態查詢指令
+ * 
+ * @return esp_err_t ESP_OK 表示執行成功
+ */
+esp_err_t execute_ota_status_command(void);
+
+/**
+ * @brief 執行取消 OTA 更新指令
+ * 
+ * @return esp_err_t ESP_OK 表示執行成功
+ */
+esp_err_t execute_ota_cancel_command(void);
 
 
 esp_mqtt_client_handle_t get_mqtt_client(void);

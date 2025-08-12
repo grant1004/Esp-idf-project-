@@ -4,6 +4,7 @@
 // ============================================================================
 
 #include "command_handler.h"
+#include "ota_update.h"
 #include <string.h>
 #include <stdio.h>
 #include "freertos/FreeRTOS.h"
@@ -49,9 +50,10 @@ EventGroupHandle_t cmd_event_group = NULL; // 指令事件群組句柄
 // ============================================================================
 // 模組內部狀態變數
 // ============================================================================
-static bool pump_enabled = false;          // 泵浦狀態
+static bool pump_enabled = false;          // 泵浦狀態 (澆水時暫時為 true)
 static uint32_t processed_count = 0;       // 已處理指令計數
 static uint32_t error_count = 0;           // 錯誤指令計數
+static uint32_t water_count = 0;           // 澆水次數統計
 
 // ============================================================================
 // 內部函數宣告
@@ -112,14 +114,19 @@ command_type_t parse_command(const char* command_str, int cmd_len)
     }
     
     // 使用 strncmp 比較指令，避免緩衝區溢位
-    if (strncmp(command_str, "GPIO_ON", cmd_len) == 0) {
-        return CMD_GPIO_ON;
-    } else if (strncmp(command_str, "GPIO_OFF", cmd_len) == 0) {
-        return CMD_GPIO_OFF;
+    if (strncmp(command_str, "澆水", cmd_len) == 0 || 
+        strncmp(command_str, "WATER", cmd_len) == 0) {
+        return CMD_WATER;
     } else if (strncmp(command_str, "GET_STATUS", cmd_len) == 0) {
         return CMD_GET_STATUS;
     } else if (strncmp(command_str, "GET_READING", cmd_len) == 0) {
         return CMD_GET_READING;
+    } else if (strncmp(command_str, "OTA_UPDATE", cmd_len) == 0) {
+        return CMD_OTA_UPDATE;
+    } else if (strncmp(command_str, "OTA_STATUS", cmd_len) == 0) {
+        return CMD_OTA_STATUS;
+    } else if (strncmp(command_str, "OTA_CANCEL", cmd_len) == 0) {
+        return CMD_OTA_CANCEL;
     }
     
     return CMD_UNKNOWN;
@@ -161,27 +168,45 @@ esp_err_t enqueue_command(command_type_t cmd_type, const char* data)
 }
 
 // ============================================================================
-// 執行 GPIO 控制指令
+// 執行澆水指令 - 自動開啟幫浦1.5秒後關閉
 // ============================================================================
-esp_err_t execute_gpio_command(bool enable)
+esp_err_t execute_water_command(void)
 {
-    ESP_LOGI(TAG, "執行 GPIO 指令: %s", enable ? "開啟" : "關閉");
+    ESP_LOGI(TAG, "🚿 執行澆水指令 - 開啟幫浦1.5秒");
     
-    // 設定 GPIO 狀態
-    gpio_set_level(PUMP_GPIO, enable ? 1 : 0);
-    pump_enabled = enable;
+    // 開啟幫浦
+    gpio_set_level(PUMP_GPIO, 1);
+    pump_enabled = true;
     
-    // 同時控制指示 LED (ESP32-C3 內建 LED 為反向邏輯)
-    gpio_set_level(LED_GPIO, enable ? 0 : 1);
+    // 開啟指示 LED (ESP32-C3 內建 LED 為反向邏輯)
+    gpio_set_level(LED_GPIO, 0);
     
-    // 發送 MQTT 回應
-    const char* response_msg = enable ? "GPIO已開啟" : "GPIO已關閉";
-    esp_err_t result = send_mqtt_response(response_msg);
+    // 發送開始澆水的 MQTT 回應
+    esp_err_t result = send_mqtt_response("🚿 開始澆水 - 幫浦已啟動");
+    
+    // 延遲1.5秒 (1500毫秒)
+    vTaskDelay(pdMS_TO_TICKS(1500));
+    
+    // 關閉幫浦
+    gpio_set_level(PUMP_GPIO, 0);
+    pump_enabled = false;
+    
+    // 關閉指示 LED
+    gpio_set_level(LED_GPIO, 1);
+    
+    // 增加澆水次數統計
+    water_count++;
+    
+    // 發送完成澆水的 MQTT 回應
+    char completion_msg[128];
+    snprintf(completion_msg, sizeof(completion_msg), 
+             "✅ 澆水完成 - 幫浦已關閉 (總澆水次數: %lu)", water_count);
+    result = send_mqtt_response(completion_msg);
     
     if (result == ESP_OK) {
-        ESP_LOGI(TAG, "✅ GPIO 指令執行完成: %s", response_msg);
+        ESP_LOGI(TAG, "✅ 澆水指令執行完成 - 幫浦運行1.5秒後已關閉 (總次數: %lu)", water_count);
     } else {
-        ESP_LOGW(TAG, "GPIO 指令執行完成但回應發送失敗");
+        ESP_LOGW(TAG, "澆水指令執行完成但回應發送失敗");
     }
     
     return ESP_OK;
@@ -195,17 +220,22 @@ esp_err_t execute_status_command(void)
     ESP_LOGI(TAG, "執行狀態查詢指令");
     
     // 建立狀態回應訊息
-    char status_msg[128];
+    char status_msg[200];
     snprintf(status_msg, sizeof(status_msg), 
-             "系統狀態: 運行中, GPIO: %s, 已處理指令: %lu, 錯誤: %lu",
-             pump_enabled ? "開啟" : "關閉",
+             "🌱 系統狀態: 運行中\n"
+             "🚿 澆水次數: %lu\n"
+             "📊 已處理指令: %lu\n"
+             "❌ 錯誤指令: %lu\n"
+             "💧 幫浦狀態: %s",
+             water_count,
              processed_count,
-             error_count);
+             error_count,
+             pump_enabled ? "運行中" : "待機中");
     
     esp_err_t result = send_mqtt_response(status_msg);
     
     if (result == ESP_OK) {
-        ESP_LOGI(TAG, "✅ 狀態查詢完成");
+        ESP_LOGI(TAG, "✅ 狀態查詢完成 - 澆水次數: %lu", water_count);
     } else {
         ESP_LOGW(TAG, "狀態查詢完成但回應發送失敗");
     }
@@ -264,6 +294,135 @@ void get_command_stats(uint32_t* processed_count_ptr, uint32_t* error_count_ptr)
 }
 
 // ============================================================================
+// 取得澆水次數統計
+// ============================================================================
+uint32_t get_water_count(void)
+{
+    return water_count;
+}
+
+// ============================================================================
+// 執行 OTA 更新指令
+// ============================================================================
+esp_err_t execute_ota_update_command(const char* firmware_url)
+{
+    ESP_LOGI(TAG, "🚀 執行 OTA 更新指令");
+    
+    if (firmware_url == NULL || strlen(firmware_url) == 0) {
+        ESP_LOGW(TAG, "⚠️ 韌體 URL 為空");
+        esp_err_t result = send_mqtt_response("❌ 錯誤：韌體 URL 為空");
+        return result == ESP_OK ? ESP_ERR_INVALID_ARG : result;
+    }
+    
+    if (ota_is_updating()) {
+        ESP_LOGW(TAG, "⚠️ OTA 更新已在進行中");
+        esp_err_t result = send_mqtt_response("⚠️ OTA 更新已在進行中");
+        return result == ESP_OK ? ESP_ERR_INVALID_STATE : result;
+    }
+    
+    // 設定 OTA 配置
+    ota_config_t ota_config = {
+        .auto_reboot = true,
+        .timeout_ms = 30000,  // 30 秒超時
+        .callback = NULL
+    };
+    
+    // 複製 URL (確保不會超出緩衝區)
+    strncpy(ota_config.firmware_url, firmware_url, sizeof(ota_config.firmware_url) - 1);
+    ota_config.firmware_url[sizeof(ota_config.firmware_url) - 1] = '\0';
+    
+    // 取得目前版本作為參考
+    ota_get_current_version(ota_config.version, sizeof(ota_config.version));
+    
+    esp_err_t result = ota_start_update(&ota_config);
+    
+    if (result == ESP_OK) {
+        ESP_LOGI(TAG, "✅ OTA 更新已啟動");
+        char response_msg[200];
+        snprintf(response_msg, sizeof(response_msg), 
+                 "🚀 OTA 更新已啟動\nURL: %s", firmware_url);
+        send_mqtt_response(response_msg);
+    } else {
+        ESP_LOGE(TAG, "❌ OTA 更新啟動失敗: %s", esp_err_to_name(result));
+        send_mqtt_response("❌ OTA 更新啟動失敗");
+    }
+    
+    return result;
+}
+
+// ============================================================================
+// 執行 OTA 狀態查詢指令
+// ============================================================================
+esp_err_t execute_ota_status_command(void)
+{
+    ESP_LOGI(TAG, "📊 執行 OTA 狀態查詢指令");
+    
+    ota_state_t state = ota_get_state();
+    int progress = ota_get_progress();
+    ota_statistics_t stats;
+    ota_get_statistics(&stats);
+    
+    char current_version[32];
+    ota_get_current_version(current_version, sizeof(current_version));
+    
+    const char* state_names[] = {
+        "待機中", "下載中", "驗證中", "安裝中", "更新完成", "更新錯誤"
+    };
+    
+    char status_msg[300];
+    snprintf(status_msg, sizeof(status_msg),
+             "🔄 OTA 更新狀態報告\n"
+             "📦 目前版本: %s\n"
+             "📊 狀態: %s\n"
+             "⏳ 進度: %d%%\n"
+             "✅ 總更新次數: %lu\n"
+             "🎯 成功次數: %lu\n"
+             "❌ 失敗次數: %lu",
+             current_version,
+             state < sizeof(state_names)/sizeof(state_names[0]) ? state_names[state] : "未知",
+             progress,
+             stats.total_updates,
+             stats.successful_updates,
+             stats.failed_updates);
+    
+    esp_err_t result = send_mqtt_response(status_msg);
+    
+    if (result == ESP_OK) {
+        ESP_LOGI(TAG, "✅ OTA 狀態查詢完成");
+    } else {
+        ESP_LOGW(TAG, "OTA 狀態查詢完成但回應發送失敗");
+    }
+    
+    return ESP_OK;
+}
+
+// ============================================================================
+// 執行取消 OTA 更新指令
+// ============================================================================
+esp_err_t execute_ota_cancel_command(void)
+{
+    ESP_LOGI(TAG, "⛔ 執行取消 OTA 更新指令");
+    
+    if (!ota_is_updating()) {
+        ESP_LOGW(TAG, "⚠️ 目前沒有進行中的 OTA 更新");
+        esp_err_t result = send_mqtt_response("⚠️ 目前沒有進行中的 OTA 更新");
+        return result == ESP_OK ? ESP_ERR_INVALID_STATE : result;
+    }
+    
+    esp_err_t result = ota_cancel_update();
+    
+    if (result == ESP_OK) {
+        ESP_LOGI(TAG, "✅ OTA 更新取消成功");
+        send_mqtt_response("✅ OTA 更新已取消");
+    } else {
+        ESP_LOGE(TAG, "❌ OTA 更新取消失敗: %s", esp_err_to_name(result));
+        send_mqtt_response("❌ OTA 更新取消失敗");
+    }
+    
+    return result;
+}
+
+// ============================================================================
 // 指令處理任務 (FreeRTOS 任務)
 // ============================================================================
 static void command_handler_task(void *pvParameters)
@@ -284,12 +443,8 @@ static void command_handler_task(void *pvParameters)
             
             // 根據指令類型執行對應動作
             switch (command.type) {
-                case CMD_GPIO_ON:
-                    exec_result = execute_gpio_command(true);
-                    break;
-                    
-                case CMD_GPIO_OFF:
-                    exec_result = execute_gpio_command(false);
+                case CMD_WATER:
+                    exec_result = execute_water_command();
                     break;
                     
                 case CMD_GET_STATUS:
@@ -298,6 +453,18 @@ static void command_handler_task(void *pvParameters)
                     
                 case CMD_GET_READING:
                     exec_result = execute_reading_command();
+                    break;
+                    
+                case CMD_OTA_UPDATE:
+                    exec_result = execute_ota_update_command(command.data);
+                    break;
+                    
+                case CMD_OTA_STATUS:
+                    exec_result = execute_ota_status_command();
+                    break;
+                    
+                case CMD_OTA_CANCEL:
+                    exec_result = execute_ota_cancel_command();
                     break;
                     
                 case CMD_UNKNOWN:

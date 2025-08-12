@@ -44,9 +44,10 @@
 
 
 // ============================================================================
-// 自定義 mqtt command handler 函式庫
+// 自定義模組函式庫
 // ============================================================================
-#include "command_handler.h"  // 新增：指令處理模組
+#include "command_handler.h"  // 指令處理模組
+#include "ota_update.h"       // OTA 韌體更新模組
 
 // ============================================================================
 // WiFi 連接設定區 - 使用者需要修改的部分
@@ -484,10 +485,22 @@ static void send_system_status(void)
     // 🔄 新增：指令處理統計資訊
     uint32_t processed_cmds, error_cmds;
     get_command_stats(&processed_cmds, &error_cmds);
+    uint32_t watering_count = get_water_count();
+    
+    // 🔄 新增：OTA 統計資訊
+    ota_statistics_t ota_stats;
+    ota_get_statistics(&ota_stats);
+    char current_version[32];
+    ota_get_current_version(current_version, sizeof(current_version));
     
     cJSON *gpio_status = cJSON_CreateBool(get_pump_status());
     cJSON *cmd_processed = cJSON_CreateNumber(processed_cmds);
     cJSON *cmd_errors = cJSON_CreateNumber(error_cmds);
+    cJSON *water_count_json = cJSON_CreateNumber(watering_count);
+    cJSON *firmware_version = cJSON_CreateString(current_version);
+    cJSON *ota_updates = cJSON_CreateNumber(ota_stats.total_updates);
+    cJSON *ota_success = cJSON_CreateNumber(ota_stats.successful_updates);
+    cJSON *ota_state = cJSON_CreateNumber((int)ota_get_state());
     cJSON *type = cJSON_CreateString("system_status");
     
     cJSON_AddItemToObject(json, "timestamp", timestamp);
@@ -497,14 +510,19 @@ static void send_system_status(void)
     cJSON_AddItemToObject(json, "gpio_status", gpio_status);
     cJSON_AddItemToObject(json, "commands_processed", cmd_processed);
     cJSON_AddItemToObject(json, "command_errors", cmd_errors);
+    cJSON_AddItemToObject(json, "water_count", water_count_json);
+    cJSON_AddItemToObject(json, "firmware_version", firmware_version);
+    cJSON_AddItemToObject(json, "ota_updates", ota_updates);
+    cJSON_AddItemToObject(json, "ota_success", ota_success);
+    cJSON_AddItemToObject(json, "ota_state", ota_state);
     cJSON_AddItemToObject(json, "type", type);
     
     char *json_string = cJSON_Print(json);
     
     if (json_string) {
         esp_mqtt_client_publish(mqtt_client, TOPIC_STATUS, json_string, 0, 1, 0);
-        ESP_LOGI(TAG, "📈 發送系統狀態 (指令統計: 成功=%lu, 錯誤=%lu)", 
-                 processed_cmds, error_cmds);
+        ESP_LOGI(TAG, "📈 發送系統狀態 (指令統計: 成功=%lu, 錯誤=%lu, 澆水=%lu)", 
+                 processed_cmds, error_cmds, watering_count);
         free(json_string);
     }
     
@@ -623,10 +641,17 @@ void app_main(void)
     wifi_init_sta();  // 初始化 WiFi (Station 模式)
     mqtt_init();      // 初始化 MQTT 客戶端
     
-    // 🔄 新增：初始化指令處理模組
+    // 🔄 初始化指令處理模組
     ret = command_handler_init();
     if (ret != ESP_OK) {
         ESP_LOGE(TAG, "❌ 指令處理模組初始化失敗");
+        return;  // 終止程式執行
+    }
+    
+    // 🔄 新增：初始化 OTA 更新模組
+    ret = ota_update_init();
+    if (ret != ESP_OK) {
+        ESP_LOGE(TAG, "❌ OTA 更新模組初始化失敗");
         return;  // 終止程式執行
     }
 
