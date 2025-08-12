@@ -90,6 +90,12 @@
 #define SAMPLE_COUNT 10   // 每次讀取的採樣次數，用於平均化以提高精度
 
 // ============================================================================
+// 資料發送頻率設定
+// ============================================================================
+#define SENSOR_DATA_INTERVAL 60   // 感測器資料發送間隔 (秒)
+#define SYSTEM_STATUS_INTERVAL 30 // 系統狀態發送間隔 (秒)
+
+// ============================================================================
 // 日誌系統設定
 // ============================================================================
 static const char *TAG = "SOIL_SENSOR"; // 日誌標籤，用於識別此模組的日誌輸出
@@ -581,9 +587,9 @@ static void send_sensor_data(void)
         
         data_counter++;
         
-        ESP_LOGI(TAG, "[%d] ADC:%d 電壓:%.3fV 濕度:%.1f%% GPIO:%s (QoS 0)", 
+        ESP_LOGI(TAG, "[%d] ADC:%d 電壓:%.3fV 濕度:%.1f%% GPIO:%s (每%d秒/QoS 0)", 
                 data_counter, raw_adc, voltage, moisture, 
-                current_pump_status ? "ON" : "OFF");
+                current_pump_status ? "ON" : "OFF", SENSOR_DATA_INTERVAL);
         
         free(json_string);
     }
@@ -645,8 +651,8 @@ static void send_system_status(void)
     
     if (json_string) {
         esp_mqtt_client_publish(mqtt_client, TOPIC_STATUS, json_string, 0, 2, 1);
-        ESP_LOGI(TAG, "📈 發送系統狀態 (指令統計: 成功=%lu, 錯誤=%lu, 澆水=%lu) [QoS 2, Retained]", 
-                 processed_cmds, error_cmds, watering_count);
+        ESP_LOGI(TAG, "📈 發送系統狀態 (指令統計: 成功=%lu, 錯誤=%lu, 澆水=%lu) [每%d秒/QoS 2/Retained]", 
+                 processed_cmds, error_cmds, watering_count, SYSTEM_STATUS_INTERVAL);
         free(json_string);
     }
     
@@ -691,15 +697,15 @@ static void sensor_task(void *pvParameters)
         // 取得目前時間 (秒)
         uint32_t now = esp_timer_get_time() / 1000000;
         
-        // 每2秒發送感測器資料 (比樹莓派版本的1秒稍慢，避免過於頻繁)
-        if (now - last_data_time >= 2) {
+        // 每60秒發送感測器資料 (土壤濕度變化緩慢，減少網路負載)
+        if (now - last_data_time >= SENSOR_DATA_INTERVAL) {
             send_sensor_data();   // 發送感測器資料
             blink_led(1);         // LED 閃爍1次表示資料發送
             last_data_time = now; // 更新發送時間
         }
         
-        // 每30秒發送系統狀態 (與樹莓派版本一致)
-        if (now - last_status_time >= 30) {
+        // 每30秒發送系統狀態 (保留較高頻率以監控系統健康狀態)
+        if (now - last_status_time >= SYSTEM_STATUS_INTERVAL) {
             send_system_status();    // 發送系統狀態
             last_status_time = now;  // 更新發送時間
         }
