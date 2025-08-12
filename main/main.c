@@ -42,7 +42,7 @@
 #include "mqtt_client.h" // MQTT 客戶端函式庫，提供 MQTT 協定實作
 #include "cJSON.h"       // JSON 處理函式庫，用於建立和解析 JSON 格式資料
 #include "esp_netif.h"   // 網路介面函式庫，提供網路配置功能
-#include <arpa/inet.h>   // 網路位址轉換函式庫，提供 inet_pton 函數
+#include "lwip/inet.h"   // LwIP 網路函式庫，提供 IP 位址轉換
 
 
 // ============================================================================
@@ -221,12 +221,14 @@ static void wifi_init_sta(void)
     
     // 設定 DNS 伺服器以解決 DNS 解析問題
     esp_netif_dns_info_t dns_info;
-    inet_pton(AF_INET, "8.8.8.8", &dns_info.ip.u_addr.ip4);
+    
+    // 設定主要 DNS (Google DNS 8.8.8.8)
+    dns_info.ip.u_addr.ip4.addr = ipaddr_addr("8.8.8.8");
     dns_info.ip.type = IPADDR_TYPE_V4;
     esp_netif_set_dns_info(netif, ESP_NETIF_DNS_MAIN, &dns_info);
     
-    // 設定備用 DNS
-    inet_pton(AF_INET, "8.8.4.4", &dns_info.ip.u_addr.ip4);
+    // 設定備用 DNS (Google DNS 8.8.4.4)
+    dns_info.ip.u_addr.ip4.addr = ipaddr_addr("8.8.4.4");
     esp_netif_set_dns_info(netif, ESP_NETIF_DNS_BACKUP, &dns_info);
 
     // WiFi 初始化配置結構，使用預設值 (來自 esp_wifi.h)
