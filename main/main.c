@@ -62,10 +62,10 @@
 // ============================================================================
 // MQTT 伺服器設定區 - 與樹莓派版本保持一致的通訊協定
 // ============================================================================
-#define BROKER_HOST "91.121.93.94" // MQTT Broker IP地址 (test.mosquitto.org 的IP)
-#define BROKER_PORT 1883                // MQTT 標準埠號 (非加密連接)
+#define BROKER_HOST "switchback.proxy.rlwy.net"// MQTT Broker 主機名稱 (自定義 broker)
+#define BROKER_PORT 24509                // 自定義 MQTT 埠號
 #define CLIENT_ID "soilsensorcapture_esp32c3" // MQTT 客戶端 ID，必須唯一
-#define MQTT_BROKER "mqtt://91.121.93.94:1883" // 完整的 MQTT 連接 URI
+#define MQTT_BROKER "mqtt://switchback.proxy.rlwy.net:24509" // 完整的 MQTT 連接 URI
 
 // ============================================================================
 // MQTT Topic 定義區 - 訊息主題設計，與樹莓派版本互相兼容
@@ -119,19 +119,37 @@ static void network_diagnostics(void)
 {
     ESP_LOGI(TAG, "🔧 開始網路診斷...");
     
+    // 測試DNS解析
+    ESP_LOGI(TAG, "🔍 解析 MQTT Broker 域名: %s", BROKER_HOST);
+    struct hostent *he = gethostbyname(BROKER_HOST);
+    if (he == NULL) {
+        ESP_LOGE(TAG, "❌ DNS解析失敗: %s", BROKER_HOST);
+        return;
+    }
+    
+    struct in_addr **addr_list = (struct in_addr **)he->h_addr_list;
+    if (addr_list[0] == NULL) {
+        ESP_LOGE(TAG, "❌ 無法取得IP位址");
+        return;
+    }
+    
+    char ip_str[INET_ADDRSTRLEN];
+    inet_ntoa_r(*addr_list[0], ip_str, INET_ADDRSTRLEN);
+    ESP_LOGI(TAG, "✅ DNS解析成功: %s -> %s", BROKER_HOST, ip_str);
+    
     // 測試基本TCP連接到MQTT Broker
     int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
     if (sock >= 0) {
         struct sockaddr_in dest_addr;
         dest_addr.sin_family = AF_INET;
         dest_addr.sin_port = htons(BROKER_PORT);
-        inet_aton(BROKER_HOST, &dest_addr.sin_addr);
+        dest_addr.sin_addr = *addr_list[0];
         
-        ESP_LOGI(TAG, "🔌 嘗試連接 MQTT Broker: %s:%d", BROKER_HOST, BROKER_PORT);
+        ESP_LOGI(TAG, "🔌 嘗試連接 MQTT Broker: %s:%d", ip_str, BROKER_PORT);
         
         // 設定 socket 超時
         struct timeval timeout;
-        timeout.tv_sec = 10;  // 10秒超時
+        timeout.tv_sec = 15;  // 增加到15秒超時，因為自定義broker可能較慢
         timeout.tv_usec = 0;
         setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
         setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
@@ -140,7 +158,7 @@ static void network_diagnostics(void)
         if (result == 0) {
             ESP_LOGI(TAG, "✅ MQTT Broker TCP連接成功！");
         } else {
-            ESP_LOGE(TAG, "❌ MQTT Broker TCP連接失敗: %d", errno);
+            ESP_LOGE(TAG, "❌ MQTT Broker TCP連接失敗: %d (errno: %d)", result, errno);
         }
         close(sock);
     } else {
@@ -300,10 +318,19 @@ static void wifi_init_sta(void)
     
     // 建立預設的 WiFi Station 網路介面 (來自 esp_wifi.h)
     // 返回網路介面句柄，用於後續網路操作
-    esp_netif_create_default_wifi_sta();
+    esp_netif_t *netif = esp_netif_create_default_wifi_sta();
     
-    // 暫時移除自定義DNS設定，使用DHCP提供的DNS
-    // 讓路由器的DNS設定決定DNS伺服器
+    // 設定 DNS 伺服器以確保域名解析正常工作
+    esp_netif_dns_info_t dns_info;
+    
+    // 設定主要 DNS (Google DNS 8.8.8.8)
+    dns_info.ip.u_addr.ip4.addr = ipaddr_addr("8.8.8.8");
+    dns_info.ip.type = IPADDR_TYPE_V4;
+    esp_netif_set_dns_info(netif, ESP_NETIF_DNS_MAIN, &dns_info);
+    
+    // 設定備用 DNS (Google DNS 8.8.4.4)  
+    dns_info.ip.u_addr.ip4.addr = ipaddr_addr("8.8.4.4");
+    esp_netif_set_dns_info(netif, ESP_NETIF_DNS_BACKUP, &dns_info);
 
     // WiFi 初始化配置結構，使用預設值 (來自 esp_wifi.h)
     // WIFI_INIT_CONFIG_DEFAULT() 是一個巨集，提供標準的初始化參數
