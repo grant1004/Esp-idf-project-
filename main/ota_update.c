@@ -18,6 +18,7 @@
 #include "esp_partition.h"
 #include "esp_timer.h"
 #include "esp_app_desc.h"
+#include "esp_image_format.h"
 #include "mqtt_client.h"
 
 // ============================================================================
@@ -65,7 +66,6 @@ typedef struct {
 // 內部函數宣告
 // ============================================================================
 static void ota_task(void *pvParameter);
-static esp_err_t ota_http_event_handler(esp_http_client_event_t *evt);
 static void ota_update_progress(int percentage, ota_state_t state, const char* message);
 static esp_err_t ota_validate_image_header(esp_app_desc_t *new_app_info);
 static void ota_send_mqtt_status(const char* message);

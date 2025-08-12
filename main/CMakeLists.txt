@@ -17,5 +17,6 @@ idf_component_register(
         app_update      # OTA 應用程式更新
         esp_http_client # HTTP 客戶端 (用於 OTA 下載)
         bootloader_support # 啟動載入器支援
+        spi_flash       # SPI Flash 和映像格式支援
     INCLUDE_DIRS "."    # 明確指定當前目錄
 )
