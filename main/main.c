@@ -62,10 +62,10 @@
 // ============================================================================
 // MQTT 伺服器設定區 - 與樹莓派版本保持一致的通訊協定
 // ============================================================================
-#define BROKER_HOST "test.mosquitto.org" // MQTT Broker 主機名稱 (Eclipse Mosquitto 公共測試服務)
+#define BROKER_HOST "91.121.93.94" // MQTT Broker IP地址 (test.mosquitto.org 的IP)
 #define BROKER_PORT 1883                // MQTT 標準埠號 (非加密連接)
 #define CLIENT_ID "soilsensorcapture_esp32c3" // MQTT 客戶端 ID，必須唯一
-#define MQTT_BROKER "mqtt://test.mosquitto.org:1883" // 完整的 MQTT 連接 URI
+#define MQTT_BROKER "mqtt://91.121.93.94:1883" // 完整的 MQTT 連接 URI
 
 // ============================================================================
 // MQTT Topic 定義區 - 訊息主題設計，與樹莓派版本互相兼容
@@ -108,6 +108,8 @@ static adc_oneshot_unit_handle_t adc1_handle;  // ADC1 單元句柄 (ESP-IDF v5.
 static adc_cali_handle_t adc1_cali_handle = NULL; // ADC 校準句柄，用於電壓轉換
 // static bool pump_enabled = false;              // 泵浦開關狀態 (false=關閉, true=開啟)
 static int data_counter = 0;                   // 資料發送計數器，用於統計
+static int wifi_retry_count = 0;               // WiFi 重連計數器
+#define WIFI_MAXIMUM_RETRY 10                  // 最大重連次數
 
 // ============================================================================
 // 網路診斷函數
@@ -117,29 +119,32 @@ static void network_diagnostics(void)
 {
     ESP_LOGI(TAG, "🔧 開始網路診斷...");
     
-    // 測試DNS解析
-    struct hostent *he = gethostbyname("test.mosquitto.org");
-    if (he != NULL) {
-        struct in_addr **addr_list = (struct in_addr **)he->h_addr_list;
-        if (addr_list[0] != NULL) {
-            ESP_LOGI(TAG, "✅ DNS解析成功: test.mosquitto.org -> %s", 
-                     inet_ntoa(*addr_list[0]));
+    // 測試基本TCP連接到MQTT Broker
+    int sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (sock >= 0) {
+        struct sockaddr_in dest_addr;
+        dest_addr.sin_family = AF_INET;
+        dest_addr.sin_port = htons(BROKER_PORT);
+        inet_aton(BROKER_HOST, &dest_addr.sin_addr);
+        
+        ESP_LOGI(TAG, "🔌 嘗試連接 MQTT Broker: %s:%d", BROKER_HOST, BROKER_PORT);
+        
+        // 設定 socket 超時
+        struct timeval timeout;
+        timeout.tv_sec = 10;  // 10秒超時
+        timeout.tv_usec = 0;
+        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+        setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, &timeout, sizeof(timeout));
+        
+        int result = connect(sock, (struct sockaddr*)&dest_addr, sizeof(dest_addr));
+        if (result == 0) {
+            ESP_LOGI(TAG, "✅ MQTT Broker TCP連接成功！");
+        } else {
+            ESP_LOGE(TAG, "❌ MQTT Broker TCP連接失敗: %d", errno);
         }
+        close(sock);
     } else {
-        ESP_LOGE(TAG, "❌ DNS解析失敗: test.mosquitto.org");
-        return;
-    }
-    
-    // 測試Google DNS
-    he = gethostbyname("google.com");
-    if (he != NULL) {
-        struct in_addr **addr_list = (struct in_addr **)he->h_addr_list;
-        if (addr_list[0] != NULL) {
-            ESP_LOGI(TAG, "✅ Google DNS測試成功: google.com -> %s", 
-                     inet_ntoa(*addr_list[0]));
-        }
-    } else {
-        ESP_LOGE(TAG, "❌ Google DNS測試失敗");
+        ESP_LOGE(TAG, "❌ Socket 建立失敗");
     }
     
     ESP_LOGI(TAG, "🔧 網路診斷完成");
@@ -157,19 +162,30 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         // 呼叫 esp_wifi_connect() 開始連接 WiFi (來自 esp_wifi.h)
         esp_wifi_connect();
+        ESP_LOGI(TAG, "🚀 WiFi 啟動，開始連接...");
     } 
     // 檢查是否為 WiFi 斷線事件
     else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
         // 取得斷線原因
         wifi_event_sta_disconnected_t* disconnected_event = (wifi_event_sta_disconnected_t*) event_data;
-        ESP_LOGW(TAG, "⚠️ WiFi 斷線 (原因碼: %d)，重新連接中...", disconnected_event->reason);
+        ESP_LOGW(TAG, "⚠️ WiFi 斷線 (原因碼: %d)", disconnected_event->reason);
         
-        // 自動重新連接 WiFi
-        esp_wifi_connect();
-        
-        // 清除 WiFi 連接事件位元 (來自 freertos/event_groups.h)
-        // 參數：事件群組句柄, 要清除的位元
+        // 清除 WiFi 連接事件位元
         xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+        
+        // 有限重試機制
+        if (wifi_retry_count < WIFI_MAXIMUM_RETRY) {
+            wifi_retry_count++;
+            ESP_LOGI(TAG, "🔄 WiFi 重連中... (第 %d/%d 次)", wifi_retry_count, WIFI_MAXIMUM_RETRY);
+            
+            // 延遲重連，避免過於頻繁
+            vTaskDelay(pdMS_TO_TICKS(5000)); // 延遲5秒
+            esp_wifi_connect();
+        } else {
+            ESP_LOGE(TAG, "❌ WiFi 重連失敗，達到最大重試次數");
+            // 重置計數器以便後續重試
+            wifi_retry_count = 0;
+        }
     } 
     // 檢查是否為取得 IP 事件
     else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
@@ -189,6 +205,9 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
                 ESP_LOGI(TAG, "🔍 主DNS: " IPSTR, IP2STR(&dns_info.ip.u_addr.ip4));
             }
         }
+        
+        // 重置 WiFi 重連計數器
+        wifi_retry_count = 0;
         
         // 設定 WiFi 連接成功事件位元 (來自 freertos/event_groups.h)
         // 參數：事件群組句柄, 要設定的位元
