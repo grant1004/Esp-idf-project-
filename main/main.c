@@ -110,6 +110,42 @@ static adc_cali_handle_t adc1_cali_handle = NULL; // ADC 校準句柄，用於�
 static int data_counter = 0;                   // 資料發送計數器，用於統計
 
 // ============================================================================
+// 網路診斷函數
+// 功能：測試DNS解析和基本連通性
+// ============================================================================
+static void network_diagnostics(void)
+{
+    ESP_LOGI(TAG, "🔧 開始網路診斷...");
+    
+    // 測試DNS解析
+    struct hostent *he = gethostbyname("test.mosquitto.org");
+    if (he != NULL) {
+        struct in_addr **addr_list = (struct in_addr **)he->h_addr_list;
+        if (addr_list[0] != NULL) {
+            ESP_LOGI(TAG, "✅ DNS解析成功: test.mosquitto.org -> %s", 
+                     inet_ntoa(*addr_list[0]));
+        }
+    } else {
+        ESP_LOGE(TAG, "❌ DNS解析失敗: test.mosquitto.org");
+        return;
+    }
+    
+    // 測試Google DNS
+    he = gethostbyname("google.com");
+    if (he != NULL) {
+        struct in_addr **addr_list = (struct in_addr **)he->h_addr_list;
+        if (addr_list[0] != NULL) {
+            ESP_LOGI(TAG, "✅ Google DNS測試成功: google.com -> %s", 
+                     inet_ntoa(*addr_list[0]));
+        }
+    } else {
+        ESP_LOGE(TAG, "❌ Google DNS測試失敗");
+    }
+    
+    ESP_LOGI(TAG, "🔧 網路診斷完成");
+}
+
+// ============================================================================
 // WiFi 事件處理函數
 // 功能：處理 WiFi 連接、斷線、取得 IP 等事件
 // 參數：arg - 使用者參數, event_base - 事件類型, event_id - 事件 ID, event_data - 事件資料
@@ -161,42 +197,6 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
         // 執行網路診斷
         network_diagnostics();
     }
-}
-
-// ============================================================================
-// 網路診斷函數
-// 功能：測試DNS解析和基本連通性
-// ============================================================================
-static void network_diagnostics(void)
-{
-    ESP_LOGI(TAG, "🔧 開始網路診斷...");
-    
-    // 測試DNS解析
-    struct hostent *he = gethostbyname("test.mosquitto.org");
-    if (he != NULL) {
-        struct in_addr **addr_list = (struct in_addr **)he->h_addr_list;
-        if (addr_list[0] != NULL) {
-            ESP_LOGI(TAG, "✅ DNS解析成功: test.mosquitto.org -> %s", 
-                     inet_ntoa(*addr_list[0]));
-        }
-    } else {
-        ESP_LOGE(TAG, "❌ DNS解析失敗: test.mosquitto.org");
-        return;
-    }
-    
-    // 測試Google DNS
-    he = gethostbyname("google.com");
-    if (he != NULL) {
-        struct in_addr **addr_list = (struct in_addr **)he->h_addr_list;
-        if (addr_list[0] != NULL) {
-            ESP_LOGI(TAG, "✅ Google DNS測試成功: google.com -> %s", 
-                     inet_ntoa(*addr_list[0]));
-        }
-    } else {
-        ESP_LOGE(TAG, "❌ Google DNS測試失敗");
-    }
-    
-    ESP_LOGI(TAG, "🔧 網路診斷完成");
 }
 
 // ============================================================================
@@ -281,7 +281,7 @@ static void wifi_init_sta(void)
     
     // 建立預設的 WiFi Station 網路介面 (來自 esp_wifi.h)
     // 返回網路介面句柄，用於後續網路操作
-    esp_netif_t *netif = esp_netif_create_default_wifi_sta();
+    esp_netif_create_default_wifi_sta();
     
     // 暫時移除自定義DNS設定，使用DHCP提供的DNS
     // 讓路由器的DNS設定決定DNS伺服器
