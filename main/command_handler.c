@@ -507,7 +507,7 @@ static esp_err_t send_mqtt_response(const char* message)
         return ESP_ERR_INVALID_ARG;
     }
     
-    int msg_id = esp_mqtt_client_publish(client, TOPIC_RESPONSE, message, 0, 1, 0);
+    int msg_id = esp_mqtt_client_publish(client, TOPIC_RESPONSE, message, 0, 0, 0);
     
     if (msg_id >= 0) {
         ESP_LOGD(TAG, "MQTT 回應已發送: %s (msg_id=%d)", message, msg_id);

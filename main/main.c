@@ -232,8 +232,8 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
     switch ((esp_mqtt_event_id_t)event_id) {
     case MQTT_EVENT_CONNECTED:
         ESP_LOGI(TAG, "✅ MQTT 已連接到 %s", BROKER_HOST);
-        esp_mqtt_client_subscribe(client, TOPIC_COMMAND, 1);
-        ESP_LOGI(TAG, "📝 已訂閱指令主題: %s", TOPIC_COMMAND);
+        esp_mqtt_client_subscribe(client, TOPIC_COMMAND, 0);
+        ESP_LOGI(TAG, "📝 已訂閱指令主題: %s (QoS 0)", TOPIC_COMMAND);
         break;
         
     case MQTT_EVENT_DISCONNECTED:
@@ -264,12 +264,12 @@ static void mqtt_event_handler(void *handler_args, esp_event_base_t base,
                 ESP_LOGW(TAG, "⚠️ 指令佇列忙碌，請稍後重試");
                 // 可以選擇發送錯誤回應
                 esp_mqtt_client_publish(client, TOPIC_RESPONSE, 
-                                      "系統忙碌，請稍後重試", 0, 1, 0);
+                                      "系統忙碌，請稍後重試", 0, 0, 0);
             }
         } else {
             ESP_LOGW(TAG, "⚠️ 未知的 MQTT 指令");
             esp_mqtt_client_publish(client, TOPIC_RESPONSE, 
-                                  "未知指令", 0, 1, 0);
+                                  "未知指令", 0, 0, 0);
         }
         break;
         
@@ -550,7 +550,7 @@ static void send_sensor_data(void)
     char *json_string = cJSON_Print(json);
     
     if (json_string) {
-        esp_mqtt_client_publish(mqtt_client, TOPIC_DATA, json_string, 0, 1, 0);
+        esp_mqtt_client_publish(mqtt_client, TOPIC_DATA, json_string, 0, 0, 0);
         
         data_counter++;
         
@@ -617,7 +617,7 @@ static void send_system_status(void)
     char *json_string = cJSON_Print(json);
     
     if (json_string) {
-        esp_mqtt_client_publish(mqtt_client, TOPIC_STATUS, json_string, 0, 1, 0);
+        esp_mqtt_client_publish(mqtt_client, TOPIC_STATUS, json_string, 0, 0, 0);
         ESP_LOGI(TAG, "📈 發送系統狀態 (指令統計: 成功=%lu, 錯誤=%lu, 澆水=%lu)", 
                  processed_cmds, error_cmds, watering_count);
         free(json_string);

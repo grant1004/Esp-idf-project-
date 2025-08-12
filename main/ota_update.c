@@ -401,7 +401,7 @@ static void ota_send_mqtt_status(const char* message)
     esp_mqtt_client_handle_t client = get_mqtt_client();
     if (client && message) {
         esp_mqtt_client_publish(client, "soilsensorcapture/esp/ota_status", 
-                               message, 0, 1, 0);
+                               message, 0, 0, 0);
     }
 }
 
