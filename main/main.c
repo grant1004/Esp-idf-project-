@@ -203,7 +203,7 @@ static void wifi_event_handler(void* arg, esp_event_base_t event_base,
             ESP_LOGI(TAG, "🔄 WiFi 重連中... (第 %d/%d 次)", wifi_retry_count, WIFI_MAXIMUM_RETRY);
             
             // 延遲重連，避免過於頻繁
-            vTaskDelay(pdMS_TO_TICKS(5000)); // 延遲5秒
+            vTaskDelay(pdMS_TO_TICKS(10000)); // 延遲10秒，給路由器更多時間
             esp_wifi_connect();
         } else {
             ESP_LOGE(TAG, "❌ WiFi 重連失敗，達到最大重試次數");
@@ -367,7 +367,11 @@ static void wifi_init_sta(void)
         .sta = {                                    // Station 模式配置
             .ssid = WIFI_SSID,                     // 網路名稱
             .password = WIFI_PASS,                 // 網路密碼
-            .threshold.authmode = WIFI_AUTH_WPA2_PSK, // 認證模式：WPA2-PSK
+            .threshold.authmode = WIFI_AUTH_WPA_WPA2_PSK, // 相容WPA/WPA2
+            .pmf_cfg = {
+                .capable = true,                   // 支援PMF
+                .required = false                  // 不強制PMF
+            },
         },
     };
     
@@ -382,6 +386,12 @@ static void wifi_init_sta(void)
     // 啟動 WiFi 驅動 (來自 esp_wifi.h)
     // 此時會觸發 WIFI_EVENT_STA_START 事件
     ESP_ERROR_CHECK(esp_wifi_start());
+    
+    // 設定最大WiFi發射功率以改善信號強度
+    esp_wifi_set_max_tx_power(78); // 78 = 19.5dBm (最大功率)
+    
+    // 設定WiFi節能模式為NONE以提高穩定性
+    esp_wifi_set_ps(WIFI_PS_NONE);
 
     ESP_LOGI(TAG, "WiFi 初始化完成");
 }
